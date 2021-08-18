@@ -10,17 +10,15 @@ class BTViewModel: ViewModel() {
     private val bDeviceList get() = _bDeviceList
 
     fun setBTDevice(bDeviceList: List<BTModel>) {
-        _bDeviceList.postValue(bDeviceList)
+        _bDeviceList.value = bDeviceList
     }
 
     fun setBTDevice(bDevice: BTModel) {
-        val newBTDeviceList: MutableList<BTModel> = mutableListOf()
-        newBTDeviceList.addAll(getBTDeviceList())
-        _bDeviceList.value?.let {
-            if (!newBTDeviceList.contains(bDevice)) {
-                newBTDeviceList.add(bDevice)
-                _bDeviceList.postValue(newBTDeviceList)
-            }
+        val devices: MutableList<BTModel> = mutableListOf()
+        devices.addAll(getBTDeviceList())
+        if (!devices.contains(bDevice)) {
+            devices.add(bDevice)
+            setBTDevice(devices)
         }
     }
 

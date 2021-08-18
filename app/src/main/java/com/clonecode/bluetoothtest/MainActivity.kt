@@ -11,20 +11,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.clonecode.bluetoothtest.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
-import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "janghee"
@@ -57,12 +56,13 @@ class MainActivity : AppCompatActivity() {
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            when(intent?.action) {
+            when (intent?.action) {
                 BluetoothDevice.ACTION_FOUND -> {
                     val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     btViewModel.setBTDevice(BTModel.invoke(device?.name, device?.address))
                 }
-                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {  }
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                }
             }
 
         }
@@ -79,18 +79,22 @@ class MainActivity : AppCompatActivity() {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-            }else{
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            } else {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
             }
         }
 
         binding.listener = View.OnClickListener {
-            startSearchBTDevices()
+            setBTPermission()
         }
         loadBTDevice()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
+        stopSearchBTDevices()
     }
 
     private fun loadBTDevice() {
@@ -107,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             1 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED) {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                         showToast("위치권한을 추가해 주세요.")
+                        showToast("위치권한을 추가해 주세요.")
                     }
                 } else {
                     startSearchBTDevices()
@@ -148,14 +152,15 @@ class MainActivity : AppCompatActivity() {
             showToast("블루투스를 지원하지 않습니다.")
             return
         }
-        setBTPermission()
+        selectBTDevice()
     }
 
     private fun stopSearchBTDevices() {
         try {
             bluetoothAdapter?.cancelDiscovery()
             bluetoothAdapter?.bluetoothLeScanner!!.stopScan(mScanCallback)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 
     private fun setBTPermission() {
@@ -163,7 +168,7 @@ class MainActivity : AppCompatActivity() {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         } else {
-            selectBTDevice()
+            startSearchBTDevices()
         }
     }
 
@@ -184,7 +189,6 @@ class MainActivity : AppCompatActivity() {
 //            btAdapter.submitList(deviceList)
         }
     }
-
 
 
     private fun showToast(msg: String) {
